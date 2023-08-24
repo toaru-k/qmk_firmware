@@ -9,7 +9,7 @@
 // Key mapping
 
 // Get the number of layers defined in the keymap, stored in firmware rather than any other persistent storage
-uint8_t keymap_layer_count_raw(void);
+;uint8_t keymap_layer_count_raw(void);
 // Get the number of layers defined in the keymap, potentially stored dynamically
 uint8_t keymap_layer_count(void);
 
