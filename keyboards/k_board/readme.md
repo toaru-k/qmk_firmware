@@ -1,4 +1,4 @@
-# k_board
+# K-Board
 
 ![k_board](imgur.com image replace me!)
 
