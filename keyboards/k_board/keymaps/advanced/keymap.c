@@ -146,7 +146,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [symbols] = LAYOUT(
         KC_MUTE, KC_1   , KC_2   , KC_3   , KC_4   , KC_5   ,     KC_6   , KC_7   , KC_8   , KC_9   ,  KC_0, _______, _______,
         KC_TAB , KC_MINS, KC_EQL , KC_LBRC, KC_RBRC, KC_BSLS,     KC_SCLN, KC_QUOT, KC_GRV , KC_SLSH,     KC_ENT    , XXXXXXX,
-        KC_ENT , KC_BSPC, KC_DEL , LOG    , L_Scrn , R_Scrn ,     XXXXXXX, XXXXXXX, KC_COMM, KC_DOT ,     XXXXXXX   , XXXXXXX,
+        KC_LSFT, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,     XXXXXXX, XXXXXXX, KC_COMM, KC_DOT ,     XXXXXXX   , XXXXXXX,
                                    _______, KC_LGUI, KC_EN  ,     KC_EN  , KC_RGUI, _______
     ),
     [function] = LAYOUT(
