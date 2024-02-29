@@ -4,6 +4,4 @@
 #define MK_W_INTERVAL_1 80
 #define MK_W_OFFSET_1   1
 
-#define COMBO_COUNT 1
-
-#define TAPPING_TERM 150
+// #define TAPPING_TERM 150

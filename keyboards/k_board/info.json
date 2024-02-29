@@ -36,7 +36,7 @@
         },
         "usb_detect": {
             "enabled": true,
-            "polling_interval": 500
+            "polling_interval": 100
         },
         "matrix_pins": {
             "right": {
