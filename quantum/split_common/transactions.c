@@ -20,12 +20,49 @@
 #include "crc.h"
 #include "debug.h"
 #include "matrix.h"
-#include "quantum.h"
+#include "host.h"
+#include "action_util.h"
+#include "sync_timer.h"
+#include "wait.h"
 #include "transactions.h"
 #include "transport.h"
 #include "transaction_id_define.h"
 #include "split_util.h"
 #include "synchronization_util.h"
+
+#ifdef BACKLIGHT_ENABLE
+#    include "backlight.h"
+#endif
+#ifdef RGBLIGHT_ENABLE
+#    include "rgblight.h"
+#endif
+#ifdef LED_MATRIX_ENABLE
+#    include "led_matrix.h"
+#endif
+#ifdef RGB_MATRIX_ENABLE
+#    include "rgb_matrix.h"
+#endif
+#ifdef OLED_ENABLE
+#    include "oled_driver.h"
+#endif
+#ifdef ST7565_ENABLE
+#    include "st7565.h"
+#endif
+#ifdef ENCODER_ENABLE
+#    include "encoder.h"
+#endif
+#ifdef HAPTIC_ENABLE
+#    include "haptic.h"
+#endif
+#ifdef POINTING_DEVICE_ENABLE
+#    include "pointing_device.h"
+#endif
+#ifdef OS_DETECTION_ENABLE
+#    include "os_detection.h"
+#endif
+#ifdef WPM_ENABLE
+#    include "wpm.h"
+#endif
 
 #define SYNC_TIMER_OFFSET 2
 
@@ -197,21 +234,28 @@ static void master_matrix_handlers_slave(matrix_row_t master_matrix[], matrix_ro
 #ifdef ENCODER_ENABLE
 
 static bool encoder_handlers_master(matrix_row_t master_matrix[], matrix_row_t slave_matrix[]) {
-    static uint32_t last_update = 0;
-    uint8_t         temp_state[NUM_ENCODERS_MAX_PER_SIDE];
+    static uint32_t  last_update = 0;
+    encoder_events_t temp_events;
 
-    bool okay = read_if_checksum_mismatch(GET_ENCODERS_CHECKSUM, GET_ENCODERS_DATA, &last_update, temp_state, split_shmem->encoders.state, sizeof(temp_state));
-    if (okay) encoder_update_raw(temp_state);
+    bool okay = read_if_checksum_mismatch(GET_ENCODERS_CHECKSUM, GET_ENCODERS_DATA, &last_update, &temp_events, &split_shmem->encoders.events, sizeof(temp_events));
+    if (okay) {
+        encoder_handle_slave_events(&split_shmem->encoders.events);
+        transport_write(PUT_ENCODER_TAIL, &split_shmem->encoders.events.tail, sizeof(split_shmem->encoders.events.tail));
+        split_shmem->encoders.checksum = crc8(&split_shmem->encoders.events, sizeof(split_shmem->encoders.events));
+    }
     return okay;
 }
 
 static void encoder_handlers_slave(matrix_row_t master_matrix[], matrix_row_t slave_matrix[]) {
-    uint8_t encoder_state[NUM_ENCODERS_MAX_PER_SIDE];
-    encoder_state_raw(encoder_state);
     // Always prepare the encoder state for read.
-    memcpy(split_shmem->encoders.state, encoder_state, sizeof(encoder_state));
+    encoder_retrieve_events(&split_shmem->encoders.events);
     // Now update the checksum given that the encoders has been written to
-    split_shmem->encoders.checksum = crc8(encoder_state, sizeof(encoder_state));
+    split_shmem->encoders.checksum = crc8(&split_shmem->encoders.events, sizeof(split_shmem->encoders.events));
+}
+
+static void encoder_handlers_slave_reset(uint8_t initiator2target_buffer_size, const void *initiator2target_buffer, uint8_t target2initiator_buffer_size, void *target2initiator_buffer) {
+    uint8_t tail_index = *(uint8_t *)initiator2target_buffer;
+    encoder_set_tail_index(tail_index);
 }
 
 // clang-format off
@@ -219,7 +263,8 @@ static void encoder_handlers_slave(matrix_row_t master_matrix[], matrix_row_t sl
 #    define TRANSACTIONS_ENCODERS_SLAVE() TRANSACTION_HANDLER_SLAVE_AUTOLOCK(encoder)
 #    define TRANSACTIONS_ENCODERS_REGISTRATIONS \
     [GET_ENCODERS_CHECKSUM] = trans_target2initiator_initializer(encoders.checksum), \
-    [GET_ENCODERS_DATA]     = trans_target2initiator_initializer(encoders.state),
+    [GET_ENCODERS_DATA]     = trans_target2initiator_initializer(encoders.events), \
+    [PUT_ENCODER_TAIL]      = trans_initiator2target_initializer_cb(encoders.events.tail, encoder_handlers_slave_reset),
 // clang-format on
 
 #else // ENCODER_ENABLE
@@ -412,7 +457,7 @@ static void backlight_handlers_slave(matrix_row_t master_matrix[], matrix_row_t 
     uint8_t backlight_level = split_shmem->backlight_level;
     split_shared_memory_unlock();
 
-    backlight_set(backlight_level);
+    backlight_level_noeeprom(backlight_level);
 }
 
 #    define TRANSACTIONS_BACKLIGHT_MASTER() TRANSACTION_HANDLER_MASTER(backlight)
