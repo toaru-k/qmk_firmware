@@ -4,4 +4,4 @@
 #define MK_W_INTERVAL_1 80
 #define MK_W_OFFSET_1   1
 
-// #define TAPPING_TERM 150
+#define IOS_DEVICE_ENABLE

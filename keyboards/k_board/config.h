@@ -19,3 +19,11 @@
 //#define NO_ACTION_TAPPING
 //#define NO_ACTION_ONESHOT
 
+#ifndef IOS_DEVICE_ENABLE
+  // USB_MAX_POWER_CONSUMPTION value for this keyboard
+  #define USB_MAX_POWER_CONSUMPTION 400
+#else
+  // fix iPhone and iPad power adapter issue
+  // iOS device need lessthan 100
+  #define USB_MAX_POWER_CONSUMPTION 100
+#endif
